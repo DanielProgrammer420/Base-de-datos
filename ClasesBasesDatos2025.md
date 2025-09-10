@@ -734,4 +734,284 @@ El profesor demostró el proceso completo de normalización sobre una tabla `Mat
 
 *   **Nueva Serie de Ejercicios (Serie 3):** Se ha publicado una nueva guía de ejercicios en el aula virtual. Estos ejercicios tienen una mayor complejidad y están diseñados para practicar la normalización.
 *   **Tarea para Mañana:** Los estudiantes deben resolver los ejercicios de la Serie 3 y estar preparados para presentarlos y discutirlos en la clase práctica presencial. Se recomienda analizar los datos de prueba proporcionados en la guía para entender mejor el comportamiento de los datos antes de normalizar.
-  ---
+---
+
+### **Resumen Completo de la Clase de Proyecto/Laboratorio (03/09/2025)**
+
+---
+
+#### **Tema Principal del Video**
+
+El tema central de la clase es la transición de la teoría del diseño de bases de datos a la práctica: la **implementación física en un motor de base de datos**. La sesión se enfoca en presentar los componentes, el funcionamiento interno y las herramientas necesarias para trabajar con un Sistema Gestor de Bases de Datos Relacionales (RDBMS), utilizando **SQL Server** como ejemplo principal.
+
+---
+
+#### **I. Introducción: Del Diseño Lógico al Diseño Físico**
+
+*   **Recap:** Se hace un repaso de las etapas anteriores (diseño conceptual y lógico), enfatizando la importancia de la normalización para reducir la redundancia y garantizar la consistencia de los datos.
+*   **Nuevo Horizonte (Diseño Físico):** Esta etapa consiste en llevar el modelo relacional a un motor de base de datos real. Esto implica no solo implementar el diseño, sino también incorporar las restricciones y funcionalidades propias del motor elegido.
+*   **Herramienta Principal:** Se presenta **SQL Server** como el motor de base de datos que se utilizará en la asignatura, junto con su herramienta cliente, **SQL Server Management Studio (SSMS)**.
+
+---
+
+#### **II. Conceptos Fundamentales de un Gestor de Bases de Datos (RDBMS)**
+
+El profesor diferencia entre una "base de datos" (la colección de datos) y un "gestor de base de datos" (el software que la maneja).
+
+*   **¿Qué es un RDBMS?** Es un software específico que actúa como **interfaz** entre:
+    1.  La base de datos física (los archivos).
+    2.  El usuario.
+    3.  Las aplicaciones que la utilizan.
+*   **Instalación:** Se explica que el motor (SQL Server) y la herramienta cliente (SSMS) se instalan por separado. El motor se ejecuta como un **servicio en segundo plano** en el sistema operativo, mientras que el SSMS es la aplicación con la que interactuamos.
+
+#### **III. El Concepto de "Instancia"**
+
+*   **¿Qué es una Instancia?** Es una instalación completa y en ejecución del software del motor de base de datos. Cada instancia es un **proceso o servicio independiente** en el sistema operativo.
+*   **Múltiples Instancias:** En una misma máquina se pueden tener instaladas varias instancias (ej: una versión 2019 y otra 2022), cada una con su propio nombre (ej: `SQLEXPRESS`, `INSTANCIA2`).
+*   **Funcionamiento:** Para poder acceder a una base de datos, el servicio de su instancia correspondiente **debe estar en ejecución**. Se puede verificar y gestionar desde los "Servicios" de Windows o directamente desde SSMS.
+
+#### **IV. La Anatomía de una Base de Datos Física en SQL Server**
+
+Una base de datos en SQL Server no es un único archivo, sino un conjunto de ellos.
+
+*   **Archivos Físicos:** Toda base de datos en SQL Server se compone de, como mínimo, dos archivos físicos:
+    1.  **Archivo de Datos Primario (`.mdf`):** Contiene los datos reales de las tablas, índices y todos los objetos de la base de datos.
+    2.  **Archivo de Log de Transacciones (`.ldf`):** Este es un archivo crucial. Actúa como un "diario" o "bitácora" donde se registra **primero** cada operación de modificación (INSERT, UPDATE, DELETE) antes de que se escriba permanentemente en el archivo de datos.
+
+*   **El Proceso de Checkpoint (Funcionamiento Interno):**
+    1.  Una aplicación solicita modificar un dato.
+    2.  El motor carga el dato desde el archivo `.mdf` a la memoria (buffer cache) y lo modifica ahí.
+    3.  **Inmediatamente**, la descripción de este cambio se escribe en el archivo de log `.ldf`. Esto se hace muy rápido.
+    4.  Un proceso automático llamado **"checkpoint"** se ejecuta periódicamente. Su trabajo es revisar el archivo `.ldf`, tomar todas las transacciones que ya han sido confirmadas ("comiteadas") y escribirlas de forma permanente y segura en el archivo de datos `.mdf`.
+
+*   **Importancia del Archivo de Log (`.ldf`):**
+    *   **Durabilidad y Recuperación:** Es el mecanismo que garantiza que no se pierdan datos en caso de una falla (ej: un corte de luz). Si el sistema se cae, al reiniciar, el motor lee el archivo de log y puede rehacer las transacciones completadas que no llegaron a escribirse en el `.mdf` y deshacer las incompletas.
+    *   **Backup y Restauración:** Permite estrategias de backup avanzadas ("en caliente"), donde se puede restaurar una base de datos a un punto específico en el tiempo.
+
+#### **V. Metadatos (El "Cerebro" de la Base de Datos)**
+
+*   **¿Qué son los Metadatos?** Son **"datos sobre los datos"**. Es la información que el motor de base de datos guarda sobre sí mismo para poder funcionar.
+*   **Contenido:** Incluyen información sobre:
+    *   Todas las tablas y columnas que existen.
+    *   Los tipos de datos de cada columna.
+    *   Las claves primarias y foráneas.
+    *   Las relaciones entre tablas.
+    *   Permisos de usuario y otros objetos.
+*   **Ubicación:** Se almacenan en tablas y vistas especiales del sistema, dentro de bases de datos de sistema que se crean automáticamente con cada instancia (como las bases de datos `master` y `model`).
+
+#### **VI. Transacciones y las Propiedades ACID**
+
+*   **Transacción:** Es un conjunto de operaciones que se ejecutan como un **único bloque indivisible ("todo o nada")**. Si una operación falla, todas las anteriores se deshacen (rollback).
+    *   *Ejemplo:* Una transferencia bancaria (restar de una cuenta y sumar en otra) debe ser una transacción para evitar inconsistencias.
+*   **Propiedades ACID:** Todo RDBMS robusto debe garantizar estas cuatro propiedades para sus transacciones:
+    1.  **Atomicidad:** La transacción se completa en su totalidad o no se realiza en absoluto.
+    2.  **Consistencia:** La transacción siempre lleva a la base de datos de un estado válido a otro.
+    3.  **Aislamiento (Isolation):** Las transacciones concurrentes no interfieren entre sí. El motor gestiona los bloqueos para que parezca que se ejecutan una tras otra.
+    4.  **Durabilidad:** Una vez que una transacción se confirma (commit), los cambios son permanentes y sobreviven a cualquier falla.
+
+---
+
+#### **VII. Tarea y Desafío para la Próxima Clase**
+
+*   **Objetivo:** Llevar los diseños lógicos de los ejercicios a la práctica.
+*   **Tarea:**
+    1.  Instalar **SQL Server** y **SQL Server Management Studio (SSMS)**.
+    2.  Para los ejercicios de la serie, no solo presentar el modelo relacional, sino también generar el **script SQL** de creación de las tablas (se puede hacer con ERDPlus).
+    3.  El desafío es **ejecutar ese script en SSMS**, crear una base de datos y tener las tablas funcionales en el motor.
+*   **Recursos:** Se indica a los alumnos que consulten los materiales de lectura en la sección de "Diseño Físico" del aula virtual para aprender los comandos básicos de creación de bases de datos y tablas.
+---
+### **Resumen Completo de la Clase Práctica (08/09/2025)**
+---
+
+#### **Tema Principal del Video**
+
+El tema central de la clase es una **sesión práctica de implementación y definición de restricciones en el Diseño Físico**. Se aborda cómo traducir un modelo relacional a un script de SQL ejecutable, prestando especial atención a las buenas prácticas de escritura de código, la definición de restricciones de integridad (claves primarias, foráneas, unicidad, nulos, etc.) y el uso de la herramienta **SQL Server Management Studio (SSMS)**. Además, se aclaran importantes cuestiones administrativas sobre el próximo examen parcial.
+
+---
+
+#### **I. Cuestiones Administrativas sobre el Primer Examen Parcial**
+
+Antes de iniciar la parte técnica, se definieron los detalles del primer parcial.
+
+*   **Fecha y Hora:** Jueves 18 de septiembre a las 20:00 hs. (Se movió del miércoles 17).
+*   **Modalidad:** Presencial.
+*   **Lugar:** Aulas 5 y 6.
+*   **Requerimientos:**
+    *   **Obligatorio:** Llevar notebook personal.
+    *   **Recomendación:** Llevar la batería cargada y alargues/zapatillas, ya que los enchufes son limitados.
+*   **Casos sin Notebook:** Se habilitó una encuesta en el aula virtual para que los alumnos sin notebook se anoten. La facultad proveerá equipos de laboratorio con SQL Server instalado para estos casos.
+
+#### **II. Estructura del Examen Parcial y Teórico**
+
+*   **Parcial Práctico:**
+    *   Consistirá en resolver una o varias situaciones problemáticas.
+    *   La entrega se realizará a través del aula virtual.
+    *   Se permitirá el uso de apuntes, ERDPlus y SSMS. El objetivo es evaluar la capacidad de resolver problemas, no la memorización.
+    *   **Simulacro:** El próximo lunes se realizará una simulación de 30 minutos del parcial práctico en clase.
+*   **Examen Teórico:**
+    *   **Condición:** Solo rendirán el teórico aquellos alumnos que **aprueben** el parcial práctico (ya sea en la primera instancia o en su recuperatorio).
+    *   **Modalidad:** Cuestionario en el aula virtual con preguntas cerradas (ej: multiple choice). No requiere desarrollo de conceptos.
+    *   **Contenido:** Diseño conceptual, modelo relacional, normalización y diseño físico.
+    *   **Fecha:** Lunes siguiente al parcial práctico.
+    *   **Instancias:** Tendrá su propia instancia de recuperatorio.
+
+---
+
+#### **III. Lenguaje SQL y su Implementación Física**
+
+Esta fue la parte central de la clase técnica.
+
+*   **Del Modelo Lógico al Físico:** El proceso consiste en tomar el modelo relacional (diseñado en herramientas como ERDPlus) y generar el **script SQL** para crearlo en un motor de base de datos real.
+*   **SQL Estándar (ANSI) vs. SQL Extendido (Transact-SQL):**
+    *   **SQL ANSI:** Es el estándar del lenguaje, cuyas instrucciones deberían funcionar en cualquier motor de base de datos relacional (MySQL, PostgreSQL, etc.).
+    *   **Transact-SQL (T-SQL):** Es la "versión extendida" de SQL propia de Microsoft SQL Server. Añade funcionalidades, tipos de datos y sintaxis específicas para potenciar las características del motor.
+    *   **Recomendación:** Se recomienda trabajar con **SQL Server** para la materia y así aprovechar las ventajas de T-SQL y evitar conflictos de sintaxis.
+
+#### **IV. Buenas Prácticas en la Creación de Scripts SQL**
+
+Se enfatizó que no basta con copiar y pegar el código generado por una herramienta. Es necesario refinarlo siguiendo buenas prácticas.
+
+1.  **Crear y Usar la Base de Datos Correcta:**
+    *   El primer paso en cualquier script debe ser crear la base de datos (`CREATE DATABASE nombre_db;`) y luego seleccionarla para su uso (`USE nombre_db;`).
+    *   **Error Común:** Olvidar el `USE` hará que las tablas se creen por error en la base de datos `master` del sistema, lo cual es una muy mala práctica.
+
+2.  **Uso de Esquemas (Schemas):**
+    *   **¿Qué es un Esquema?** Es un contenedor o agrupador de objetos (como tablas) dentro de una base de datos. En SQL Server, si no se especifica uno, todo se crea en el esquema por defecto `dbo` (database owner).
+    *   **Utilidad:** Sirven principalmente para organizar y aplicar **políticas de seguridad**. Se pueden agrupar todas las tablas de Recursos Humanos en un esquema `RRHH` y dar permisos de acceso a ese esquema solo a los usuarios de esa área.
+    *   **Sintaxis:** Al crear o referenciar una tabla, se debe anteponer el nombre del esquema: `CREATE TABLE RRHH.Empleado (...)`.
+
+3.  **Definición de Columnas (Restricciones de Dominio):**
+    *   **Tipo de Dato Preciso:** Elegir el tipo de dato correcto es crucial (ej: `INT`, `DECIMAL`, `VARCHAR`, `CHAR`, `DATE`, `DATETIME`).
+    *   **Restricción `NULL` vs. `NOT NULL`:** Definir explícitamente si una columna puede aceptar valores nulos (`NULL`) o si es obligatoria (`NOT NULL`). Esto traduce la "participación opcional/obligatoria" del modelo conceptual al físico.
+
+#### **V. Definición Explícita de Restricciones (Constraints)**
+
+Esta es la mejor práctica para tener un código limpio, legible y fácil de mantener.
+
+*   **¿Qué es un `CONSTRAINT`?** Es una regla que se aplica a una tabla o columna para garantizar la integridad de los datos.
+*   **La Importancia de Nombrar las Restricciones:** En lugar de definir las claves en línea, se debe usar la palabra clave `CONSTRAINT` seguida de un **nombre descriptivo**.
+    *   *Ejemplo de PK:* `CONSTRAINT PK_Departamento PRIMARY KEY (codigo_departamento)`
+    *   *Ejemplo de FK:* `CONSTRAINT FK_Empleado_Departamento FOREIGN KEY (codigo_departamento) REFERENCES Departamento(codigo_departamento)`
+*   **Beneficios de Nombrar:**
+    1.  **Legibilidad:** El script se documenta a sí mismo.
+    2.  **Mantenimiento:** Es más fácil modificar o eliminar una restricción si tiene un nombre.
+    3.  **Depuración de Errores:** Cuando la base de datos lanza un error, te dirá el **nombre de la restricción** que se violó, permitiéndote identificar el problema al instante.
+
+#### **VI. Tipos de Restricciones Discutidas**
+
+1.  **PRIMARY KEY (PK):** Define la clave primaria.
+2.  **FOREIGN KEY (FK):** Define una relación con otra tabla.
+3.  **UNIQUE:** Asegura que no haya valores duplicados en una columna (que no es la PK).
+4.  **CHECK:** Permite definir una condición de validación personalizada para los datos de una columna.
+    *   *Ejemplo:* `CONSTRAINT CHK_Empleado_Edad CHECK (DATEDIFF(year, fecha_nacimiento, GETDATE()) >= 18)` para asegurar que un empleado sea mayor de edad.
+5.  **DEFAULT:** Asigna un valor por defecto a una columna si no se especifica uno al insertar una nueva fila.
+    *   *Ejemplo:* `CONSTRAINT DF_Sala_FechaCreacion DEFAULT GETDATE() FOR fecha_creacion` para registrar automáticamente la fecha y hora de creación de un registro.
+
+---
+
+### **Conclusión y Tareas**
+
+*   **El diseño físico es la materialización del diseño lógico.** Requiere no solo traducir el modelo, sino también aplicar las restricciones y buenas prácticas específicas del motor de base de datos.
+*   **Tarea:** Para la próxima clase, los alumnos deben tener sus scripts SQL listos para ser ejecutados en SSMS, aplicando las pautas de nombrado de constraints, uso de esquemas y definición correcta de tipos de datos y nulabilidad.
+
+
+
+
+
+
+---
+### **Resumen Completo de la Clase de Base de Datos (10/09/2025)**
+---
+
+#### **Tema Principal del Video**
+
+El tema central de la clase es la **implementación práctica del Diseño Físico**, enfocándose en la transición del modelo relacional a un script de SQL funcional y bien estructurado. Se profundiza en la diferencia entre **requerimientos del modelo de datos** (implementables directamente en la estructura de la base de datos) y **reglas de negocio complejas** (que pueden requerir programación adicional). Además, se detallan las buenas prácticas para escribir scripts SQL, definir restricciones y manejar claves primarias autogestionadas (`IDENTITY`).
+
+---
+
+#### **I. Requerimientos del Modelo vs. Reglas de Negocio**
+
+Se establece una distinción crucial para entender el alcance del diseño físico en esta etapa del curso.
+
+*   **Requerimientos/Restricciones del Modelo de Datos:**
+    *   **Definición:** Son reglas que se pueden implementar **directamente en la estructura de la base de datos** utilizando las herramientas estándar de SQL.
+    *   **Objetivo:** Garantizar la integridad, consistencia y coherencia de los datos almacenados.
+    *   **Ejemplos:**
+        *   **Unicidad (`UNIQUE`):** Asegurar que un CUIL o un email no se repitan.
+        *   **Valores por Defecto (`DEFAULT`):** Asignar automáticamente la fecha actual a un campo `fecha_registro` si no se especifica una.
+        *   **Validación de Datos (`CHECK`):** Controlar que un valor esté dentro de un rango (ej: `stock >= 0`) o que la longitud de un campo sea la correcta (ej: un CUIT de 11 dígitos).
+        *   **Nulabilidad (`NULL`/`NOT NULL`):** Definir si un campo es opcional u obligatorio.
+        *   **Claves Primarias y Foráneas:** La base de la integridad relacional.
+
+*   **Reglas de Negocio Complejas:**
+    *   **Definición:** Son requerimientos que **no pueden ser modelados únicamente con la estructura de tablas y constraints básicos**. Requieren lógica de programación adicional.
+    *   **Ejemplo:** La regla del ejercicio de la casa de comidas que decía "un agregado solo puede aplicarse a platos específicos". Implementar esto de forma robusta requería un diseño de claves foráneas anidadas muy específico.
+    *   **Implementación:** Se resuelven con herramientas más avanzadas como **disparadores (triggers), procedimientos almacenados, vistas o funciones**, que se verán en la segunda parte de la materia y en el proyecto.
+
+*   **Conclusión:** El objetivo de esta primera parte del curso es dominar la implementación de los **requerimientos del modelo de datos**, creando una base sólida y normalizada.
+
+---
+
+#### **II. Del Modelo Relacional al Script SQL: Buenas Prácticas**
+
+Se enfatiza que no basta con copiar y pegar el script generado por herramientas como ERDPlus. Es necesario refinarlo.
+
+1.  **Estructura General del Script:**
+    *   **Comentarios:** Es fundamental comentar el código, especialmente describiendo el propósito de cada tabla.
+    *   **Creación y Uso de la Base de Datos:** El script debe incluir los comandos `CREATE DATABASE` y `USE nombre_db` para asegurar que los objetos se creen en el lugar correcto.
+    *   **Orden de Creación:** Las tablas deben crearse en un orden que respete las dependencias. Primero se crean las tablas "padre" (a las que se apunta con claves foráneas) y luego las "hijas".
+
+2.  **Uso de Esquemas (Schemas):**
+    *   **Definición:** Un esquema (como el `dbo` por defecto en SQL Server) es un contenedor que agrupa objetos como tablas. Sirve para organizar y aplicar políticas de seguridad de forma centralizada.
+    *   **Práctica:** Si se usan esquemas, es crucial anteponer el nombre del esquema al de la tabla (`CREATE TABLE RRHH.Empleado`) para evitar ambigüedades.
+
+3.  **Definición Explícita de Restricciones (Constraints):**
+    *   **Práctica Recomendada:** En lugar de definir las claves en línea, se debe usar la palabra clave `CONSTRAINT` seguida de un **nombre descriptivo y estandarizado**.
+    *   **Nomenclatura Sugerida:**
+        *   **Clave Primaria:** `CONSTRAINT PK_NombreTabla PRIMARY KEY (columna)`
+        *   **Clave Foránea:** `CONSTRAINT FK_TablaOrigen_TablaDestino FOREIGN KEY (columna) REFERENCES ...`
+        *   **Unicidad:** `CONSTRAINT UQ_NombreTabla_NombreColumna UNIQUE (columna)`
+    *   **Beneficios:** Mejora la legibilidad, facilita el mantenimiento y, lo más importante, proporciona mensajes de error claros que identifican exactamente qué restricción falló.
+
+---
+
+#### **III. Manejo de Claves Primarias: `IDENTITY`**
+
+Este fue un punto técnico central de la clase.
+
+*   **Claves Gestionadas por el Usuario:** Por defecto, al definir una PK (ej: `codigo_departamento INT PRIMARY KEY`), es el usuario o la aplicación quien debe proporcionar un valor único para esa columna en cada inserción. El motor solo se encarga de rechazar los duplicados.
+
+*   **Claves Autogestionadas (`IDENTITY`):**
+    *   **Definición:** `IDENTITY` es una propiedad de una columna (específica de T-SQL de SQL Server) que le indica al motor de base de datos que **él se encargará de generar automáticamente un valor numérico secuencial** para esa columna en cada nueva inserción. Su equivalente en MySQL es `AUTO_INCREMENT`.
+    *   **Sintaxis:** `codigo_departamento INT IDENTITY(1,1) PRIMARY KEY`
+        *   `IDENTITY(1,1)`: El primer `1` es el valor inicial (semilla), y el segundo `1` es el incremento.
+    *   **Comportamiento:**
+        *   Al insertar una fila, **NO se debe proporcionar un valor** para la columna `IDENTITY`. El motor lo asigna solo.
+        *   Si un registro se elimina (ej: se borra el departamento con ID=3), ese número **no se reutiliza**. El siguiente registro insertado tendrá el siguiente valor de la secuencia (ID=5, si el último fue 4). Esto garantiza la unicidad histórica de las claves.
+        *   **No se pueden insertar valores manualmente** en una columna `IDENTITY` por defecto, a menos que se habilite explícitamente (`SET IDENTITY_INSERT ON`), lo cual es una operación delicada y solo para casos especiales.
+
+---
+
+#### **IV. Comandos SQL Discutidos: DDL vs. DML**
+
+*   **DDL (Lenguaje de Definición de Datos):** Modifican la ESTRUCTURA.
+    *   `CREATE TABLE`: Crea una tabla.
+    *   `ALTER TABLE`: Modifica una tabla existente (ej: `ADD COLUMN`, `ADD CONSTRAINT`).
+    *   `DROP TABLE`: Elimina una tabla y todos sus datos de forma irreversible.
+    *   `TRUNCATE TABLE`: Elimina **todos los datos** de una tabla de forma muy rápida y **reinicia el contador `IDENTITY`**. Es una operación DDL porque redefine la estructura a su estado inicial.
+
+*   **DML (Lenguaje de Manipulación de Datos):** Modifican los DATOS.
+    *   `INSERT INTO`: Añade nuevas filas.
+    *   `UPDATE`: Modifica filas existentes.
+    *   `DELETE FROM`: Elimina filas específicas (no reinicia el `IDENTITY`).
+
+---
+
+#### **V. Tarea y Conclusión**
+
+*   **Tarea:** La tarea para la próxima clase práctica es tomar los modelos relacionales de los ejercicios, generar el script SQL y **refinarlo** aplicando las buenas prácticas discutidas:
+    1.  Estructurar el script con `CREATE DATABASE` y `USE`.
+    2.  Nombrar explícitamente todas las `CONSTRAINT` (PK, FK, UNIQUE, etc.).
+    3.  Añadir `IDENTITY` a las claves primarias que lo requieran según el enunciado.
+    4.  Crear un pequeño lote de inserciones (`INSERT`) para probar que las tablas funcionan.
+    5.  Crear un "lote de validación" con inserciones que **deberían fallar** para demostrar que las restricciones (PK, FK, UNIQUE) están funcionando correctamente.
