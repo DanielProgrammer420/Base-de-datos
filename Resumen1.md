@@ -83,7 +83,4 @@ A medida que avanzamos, el tema integra la recuperación compleja de datos media
 * **Check Constraint:**
     * `CHECK (salario > 0)`: Asegura que nadie pueda insertar un salario negativo.
 
----
 
-**Paso Siguiente:**
-¿Te gustaría que prepare un **simulacro de examen corto (5 preguntas)** basado en las "trampas comunes" para verificar que los conceptos quedaron claros?
