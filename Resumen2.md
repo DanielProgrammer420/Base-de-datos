@@ -71,6 +71,4 @@ Las **Funciones de Filas** (o escalares) son herramientas en SQL que operan sobr
 * **Comparación de Texto (UPPER):**
     `WHERE UPPER(Ciudad) = 'MADRID'` $\rightarrow$ Permite encontrar 'Madrid', 'madrid' o 'MADRID' sin importar cómo fue escrito originalmente.
 
----
 
-**Next Step:** ¿Querés que te haga un simulacro rápido de 5 preguntas (multiple choice) sobre este tema para ver si ya estás listo?
